@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pandas as pd
 from model import load_data, preprocess_split, train_model, evaluate_model
 
@@ -11,19 +11,19 @@ model = train_model(X_train, y_train)
 
 @app.route('/')
 def home():
-    return "Student Performance Prediction API"
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json(force=True)
-    math_score = data['math_score']
-    reading_score = data['reading_score']
-    writing_score = data['writing_score']
-    
-    prediction = model.predict([[math_score, reading_score, writing_score]])
-    predicted_race = label_encoder.inverse_transform(prediction)[0]
-    
-    return jsonify(predicted_race=predicted_race)
+    if request.method == 'POST':
+        math_score = request.form['math_score']
+        reading_score = request.form['reading_score']
+        writing_score = request.form['writing_score']
+        
+        prediction = model.predict([[int(math_score), int(reading_score), int(writing_score)]])
+        predicted_race = label_encoder.inverse_transform(prediction)[0]
+        
+        return f'Predicted Race/Ethnicity: {predicted_race}'
 
 if __name__ == '__main__':
     app.run(debug=True)
